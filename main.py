@@ -14,7 +14,7 @@ class User(object):
 
 
 def new_client(client, server):
-	server.send_message_to_all('helo!')
+	server.send_message(client, make_message_for_client('data', 'update'))
 
 def make_message_for_client(message, action='update', data=None):
     return json.dumps({
