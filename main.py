@@ -6,8 +6,15 @@ from websocket_server import WebsocketServer
 
 user = None
 
+logger = logging.getLogger(__name__)
+logging.basicConfig()
+
+logger.setLevel(logging.INFO)
+
 files_in_risk_of_rain_2_root_folder = ["Risk of Rain 2.exe", "Risk of Rain 2_Data"]
 files_in_risk_of_rain_2_root_folder_with_bepin = ["winhttp.dll", "BepInEx"]
+
+common_root_paths = ['C:\Program Files (x86)\Steam\steamapps\common\Risk of Rain 2']
 
 class User(object):
     """
@@ -18,6 +25,22 @@ class User(object):
     files = []
     has_bepin = False
     is_in_correct_folder = False
+
+    def __init__(self):
+        for path in common_root_paths:
+            if (self.set_path(path)):
+                if self.is_in_correct_folder:
+                    break
+
+    def get_mods(self):
+        self.mods = []
+        if self.is_in_correct_folder:
+            if self.has_bepin:
+                glob_string = "{}\*\*.dll".format(os.path.join(self._path, 'BepInEx', 'plugins'))
+                logger.info(glob_string)
+                for filename in glob.glob(glob_string):
+                    logger.info(filename)
+                    self.mods.append(filename)
 
     def set_path(self, path):
         try:
@@ -38,6 +61,7 @@ class User(object):
             for filename in files_in_risk_of_rain_2_root_folder_with_bepin:
                 if filename not in self.files:
                     self.has_bepin = False
+        self.get_mods()
         return True
 
     def get_path(self):
@@ -56,10 +80,11 @@ user = User()
 
 
 def new_client(client, server):
-	server.send_message(client, make_message_for_client('data', 'update'))
+	server.send_message(client, make_message_for_client('data', 'update', data={'user': str(user)}))
 
 
 def make_message_for_client(message, action='update', data=None):
+    logger.info(message)
     return json.dumps({
         'action': action,
         'message': message,
