@@ -20,7 +20,7 @@ class User(object):
     """
     This class is a singleton object representing the person running this script's desktop environment.
     """
-    mods = []
+    mods = {}
     _path = ""
     files = []
     has_bepin = False
@@ -36,11 +36,12 @@ class User(object):
         self.mods = []
         if self.is_in_correct_folder:
             if self.has_bepin:
-                glob_string = "{}\*\*.dll".format(os.path.join(self._path, 'BepInEx', 'plugins'))
+                glob_string = "{}\*\RainingMods.json".format(os.path.join(self._path, 'BepInEx', 'plugins', 'RainingMods'))
                 logger.info(glob_string)
                 for filename in glob.glob(glob_string):
                     logger.info(filename)
-                    self.mods.append(filename)
+                    mod_data = json.load(open(filename, 'r'))
+                    self.mods.update(mod_data)
 
     def set_path(self, path):
         try:
@@ -80,7 +81,7 @@ user = User()
 
 
 def new_client(client, server):
-	server.send_message(client, make_message_for_client('data', 'update', data={'user': str(user)}))
+    get_user_data(server, client)
 
 
 def make_message_for_client(message, action='update', data=None):
@@ -96,9 +97,13 @@ def update_root_folder(folder, server, client, **args):
         server.send_message(client, make_message_for_client('rootFolder', data={'user': str(user)}))
     else:
         server.send_message(client, make_message_for_client('Failed to read path', 'info'))
+    
+def get_user_data(server, client, **args):
+    server.send_message(client, make_message_for_client('update', 'update', {'user': str(user)}))
 
 actions = {
-    'updateRootFolder': update_root_folder
+    'updateRootFolder': update_root_folder,
+    'getUserData': get_user_data,
 }
 
 def message_received(client, server, message):
