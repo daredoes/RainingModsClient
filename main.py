@@ -1,8 +1,14 @@
 import logging
 import json
 import os
+import time
 import glob
 from websocket_server import WebsocketServer
+import tkinter as tk
+from tkinter import filedialog
+
+root = tk.Tk()
+root.withdraw()
 
 user = None
 
@@ -13,8 +19,6 @@ logger.setLevel(logging.INFO)
 
 files_in_risk_of_rain_2_root_folder = ["Risk of Rain 2.exe", "Risk of Rain 2_Data"]
 files_in_risk_of_rain_2_root_folder_with_bepin = ["winhttp.dll", "BepInEx"]
-
-common_root_paths = ['C:\Program Files (x86)\Steam\steamapps\common\Risk of Rain 2']
 
 class User(object):
     """
@@ -27,13 +31,10 @@ class User(object):
     is_in_correct_folder = False
 
     def __init__(self):
-        for path in common_root_paths:
-            if (self.set_path(path)):
-                if self.is_in_correct_folder:
-                    break
+        self.set_path('C:\\Program Files (x86)\\Steam\\steamapps\\common\\Risk of Rain 2')
 
     def get_mods(self):
-        self.mods = []
+        self.mods = {}
         if self.is_in_correct_folder:
             if self.has_bepin:
                 glob_string = "{}\*\RainingMods.json".format(os.path.join(self._path, 'BepInEx', 'plugins', 'RainingMods'))
@@ -46,7 +47,7 @@ class User(object):
     def set_path(self, path):
         try:
             os.chdir(path)
-        except (FileNotFoundError, OSError):
+        except (FileNotFoundError, OSError, TypeError):
             return False
         self._path = path
         
@@ -77,8 +78,14 @@ class User(object):
             'rootFolder': self._path
         })
 
+
+file_path = None
 user = User()
 
+def pick_root_folder():
+    file_path = filedialog.askdirectory(title="Select the folder where 'Risk of Rain 2_Data' is located",
+                                        initialdir=user.get_path())
+    return user.set_path(file_path)
 
 def new_client(client, server):
     get_user_data(server, client)
@@ -119,7 +126,11 @@ def message_received(client, server, message):
             server.send_message(client, make_message_for_client('Successfully read message', 'info', {'data': msg_data}))
     except (json.JSONDecodeError, KeyError) as e:
         server.send_message(client, make_message_for_client('Cannot read message: {}'.format(e), 'info'))
-    
+
+while not user.is_in_correct_folder:
+    if not pick_root_folder():
+        logger.info('Sleeping for 2 seconds. Quit now, or select the folder where Risk of Rain 2.exe is located.')
+        time.sleep(2)
 
 server = WebsocketServer(13254, host='127.0.0.1', loglevel=logging.INFO)
 server.set_fn_new_client(new_client)
