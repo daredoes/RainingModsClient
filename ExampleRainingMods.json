@@ -1,0 +1,56 @@
+{
+    "authorID": {
+        "repoID": {
+            "releaseID": {
+                "releaseAssetID": {
+                    "path": "pathToAsset",
+                    "download": "downloadURL"
+                }
+            },
+            "releaseID": {
+                "releaseAssetID": {
+                    "path": "pathToAsset",
+                    "download": "downloadURL"
+                }
+            },
+            "releaseID": {
+                "releaseAssetID": {
+                    "path": "pathToAsset",
+                    "download": "downloadURL"
+                }
+            }
+        },
+        "repoID": {
+            "releaseID": {
+                "releaseAssetID": {
+                    "path": "pathToAsset",
+                    "download": "downloadURL"
+                }
+            }
+        }
+    },
+    "authorID": {
+        "repoID": {
+            "releaseID": {
+                "releaseAssetID": {
+                    "path": "pathToAsset",
+                    "download": "downloadURL"
+                }
+            },
+            "releaseID": {
+                "releaseAssetID": {
+                    "path": "pathToAsset",
+                    "download": "downloadURL"
+                }
+            }
+        },
+        "repoID": {
+            "releaseID": {
+                "releaseAssetID": {
+                    "path": "pathToAsset",
+                    "download": "downloadURL"
+                }
+            }
+        }
+    }
+}
