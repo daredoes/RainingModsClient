@@ -219,9 +219,10 @@ class User(object):
             os.mkdir(self.plugin_path)
             return False
 
-    def add_mod(self, mod):
+    def add_mod(self, mod, install=False):
         if mod not in self.mods:
-            mod.install()
+            if install:
+                mod.install()
             self.mods.append(mod)
 
     def get_mods(self):
@@ -318,7 +319,7 @@ def install_mod_version(server, client, **args):
                     download_url = args[author_id][repo_id][release_id][asset_id]['download']
                     mod_asset = ModReleaseAsset(asset_id, download_url)
                     mod_release.add_asset(mod_asset)
-        user.add_mod(mod_author)
+        user.add_mod(mod_author, install=True)
     get_user_data(server, client)
             
 
