@@ -2,18 +2,18 @@ import logging
 import json
 import os
 import shutil
+import subprocess
+import sys
 import time
 import glob
 import wget
 from websocket_server import WebsocketServer
 import tkinter as tk
 from tkinter import filedialog
+import zipfile
 
-def is_admin():
-    try:
-        return ctypes.windll.shell32.IsUserAnAdmin()
-    except:
-        return False
+def is_64_bit_windows():
+    return 'PROGRAMFILES(X86)' in os.environ
 
 root = tk.Tk()
 root.withdraw()
@@ -241,6 +241,16 @@ class User(object):
 
     def __init__(self):
         self.set_path('C:\\Program Files (x86)\\Steam\\steamapps\\common\\Risk of Rain 2')
+        self.install_bepin()
+
+    def install_bepin(self):
+        download_url = 'https://github.com/daredoes/BepInExPack/releases/download/1.3.1/BepInExPack.zip'
+        path_to_zip_file = wget.download(download_url, out=self._path)
+        zip_ref = zipfile.ZipFile(path_to_zip_file, 'r')
+        zip_ref.extractall(self._path)
+        zip_ref.close()
+        os.remove(path_to_zip_file)
+        self.set_path(self._path)
 
     def check_and_create_mod_folder(self):
         if os.path.exists(self.plugin_path):
@@ -276,7 +286,7 @@ class User(object):
         self.plugin_path = os.path.join(self._path, 'BepInEx', 'plugins', 'RainingMods')
         
         self.files = glob.glob('*')
-        self.is_in_correct_folder = True
+        self.is_in_correct_folder = True if len(self.files) else False
         self.has_bepin = True
         for filename in files_in_risk_of_rain_2_root_folder:
             if filename not in self.files:
@@ -287,8 +297,9 @@ class User(object):
             for filename in files_in_risk_of_rain_2_root_folder_with_bepin:
                 if filename not in self.files:
                     self.has_bepin = False
-        if self.check_and_create_mod_folder():
-            self.get_mods()
+        if self.is_in_correct_folder and self.has_bepin:
+            if self.check_and_create_mod_folder():
+                self.get_mods()
         return True
 
     def get_path(self):
