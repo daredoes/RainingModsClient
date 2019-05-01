@@ -214,11 +214,20 @@ class ModReleaseAsset(object):
         if self.release and self.release.repo and self.release.repo.author and self.release.repo.author.user and self.release.repo.author.user.has_bepin:
             plugin_root = self.release.repo.author.user.plugin_path
             plugin_path = os.path.join(plugin_root, self.release.repo.author.name, self.release.repo.name)
-            for path in glob.glob('{}/*'.format(plugin_path)):
-                shutil.rmtree(path, ignore_errors=True)
+            for path in os.listdir(plugin_path):
+                logger.info(path)
+                full_path = os.path.join(plugin_path, path)
+                if os.path.isfile(full_path):
+                    os.remove(full_path)
+                else:
+                    shutil.rmtree(full_path, ignore_errors=True)
             plugin_path = os.path.join(plugin_path, self.release.name)
             os.makedirs(plugin_path, exist_ok=True)
             self._path = wget.download(self.download_url, plugin_path)
+            if self._path.endswith('.zip'):
+                with zipfile.ZipFile(self._path, 'r') as zip_ref:
+                    zip_ref.extractall(plugin_path)
+
         
     def __cmp__(self, other):
         try:
