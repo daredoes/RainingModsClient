@@ -37,7 +37,7 @@ def convert_mod_data_to_object(data, current_user):
             repo_data = author_data['repos'][repo_id]
             repo = ModRepo(repo_id, repo_data.get('name'), repo_data.get('url'), repo_data.get('readme'), repo_data.get('description'))
             release_data = repo_data.get('release', {})
-            release = ModRelease(release_data.get('id'), release_data.get('name'), release_data.get('tag_name'), release_data.get('url'))
+            release = ModRelease(release_data.get('id'), release_data.get('name'), release_data.get('tag_name'), release_data.get('url'), release_data.get('updated_at'))
             for asset_id in release_data.get('assets', {}):
                 asset_data = release_data['assets'][asset_id]
                 asset = ModReleaseAsset(asset_id, asset_data.get('download'), asset_data.get('path'), asset_data.get('name'), asset_data.get('content_type'))
@@ -145,12 +145,13 @@ class ModRepo(object):
                 return False
 
 class ModRelease(object):
-    def __init__(self, git_id, name, tag_name, url):
+    def __init__(self, git_id, name, tag_name, url, updated_at):
         self.id = git_id
         self.assets = []
         self.name = name
         self.tag_name = tag_name
         self.url = url
+        self.updated_at = updated_at
         self.repo = None
 
     def add_asset(self, asset):
@@ -168,7 +169,8 @@ class ModRelease(object):
             'id': self.id,
             'name': self.name,
             'tag_name': self.name,
-            'url': self.url
+            'url': self.url,
+            'updated_at': self.updated_at
         }
 
     def install(self):
