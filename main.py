@@ -214,6 +214,7 @@ class ModReleaseAsset(object):
         if self.release and self.release.repo and self.release.repo.author and self.release.repo.author.user and self.release.repo.author.user.has_bepin:
             plugin_root = self.release.repo.author.user.plugin_path
             plugin_path = os.path.join(plugin_root, self.release.repo.author.name, self.release.repo.name)
+            os.makedirs(plugin_path, exist_ok=True)
             for path in os.listdir(plugin_path):
                 logger.info(path)
                 full_path = os.path.join(plugin_path, path)
