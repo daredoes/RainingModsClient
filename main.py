@@ -76,15 +76,45 @@ class ModAuthor(object):
         }
 
     def install(self):
-        logger.info('Starting install of {}'.format(self.id))
+        logger.info('Starting install of {}'.format(self.name))
         for child in self.children:
             child.install()
-        logger.info('Finalizing install of {}'.format(self.id))
+        logger.info('Finalizing install of {}'.format(self.name))
         plugin_root = self.user.plugin_path
         plugin_path = os.path.join(plugin_root, self.name)
         os.makedirs(plugin_path, exist_ok=True)
         json.dump(self.to_dict(), open(os.path.join(plugin_path, 'RainingMods.json'), 'w'), sort_keys=True, indent=4, separators=(',', ': '))
-        logger.info('Ended install of {}'.format(self.id))
+        logger.info('Ended install of {}'.format(self.name))
+
+    def uninstall(self):
+        logger.info('Starting uninstall of {}'.format(self.name))
+        plugin_root = self.user.plugin_path
+        plugin_path = os.path.join(plugin_root, self.name)
+        shutil.rmtree(plugin_path, ignore_errors=True)
+        logger.info('Finalizing uninstall of {}'.format(self.name))
+        del self.repos
+        self.repos = []
+        logger.info('Ended uninstall of {}'.format(self.name))
+
+    def uninstall_repository(self, repository_id):
+        i = -1
+        for j, repo in enumerate(self.repos):
+            if repo.id == repository_id:
+                i = j
+                break
+
+        if i != -1:
+            logger.info('Starting uninstall of {}'.format(self.name))
+            plugin_root = self.user.plugin_path
+            plugin_path = os.path.join(plugin_root, self.name, repo.name)
+            shutil.rmtree(plugin_path, ignore_errors=True)
+            logger.info('Finalizing uninstall of {}'.format(self.name))
+            del self.repos[i]
+            logger.info('Ended uninstall of {}'.format(self.name))
+
+            if len(self.repos) == 0:
+                logger.info('Uninstalling author as there are no repostiories left')
+                self.user.uninstall_author(self.id)
 
     @property
     def children(self):
@@ -262,6 +292,22 @@ class User(object):
         os.remove(path_to_zip_file)
         self.set_path(self._path)
 
+    def uninstall_author(self, author_id):
+        i = -1
+        for j, author in enumerate(self.mods):
+            if author.id == author_id:
+                i = j
+                author.uninstall()
+                break
+        if i != -1:
+            del self.mods[i]
+
+    def uninstall_repository(self, author_id, repository_id):
+        for author in self.mods:
+            if author.id == author_id:
+                author.uninstall_repository(repository_id)
+                break
+
     def check_and_create_mod_folder(self):
         if os.path.exists(self.plugin_path):
             return True
@@ -361,12 +407,18 @@ def install_mod_version(server, client, **args):
     for mod in convert_mod_data_to_object(args, user):
         user.add_mod(mod, install=True)
     get_user_data(server, client)
+
+def uninstall_mod_version(server, client, data, **args):
+    for owner_id, repository_id in data.items():
+        user.uninstall_repository(owner_id, repository_id)
+    get_user_data(server, client)
             
 
 actions = {
     'updateRootFolder': update_root_folder,
     'getUserData': get_user_data,
     'install': install_mod_version,
+    'uninstall': uninstall_mod_version,
 }
 
 def message_received(client, server, message):
